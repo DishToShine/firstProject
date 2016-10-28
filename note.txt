@@ -1,0 +1,214 @@
+项目期间，主要是以学员自己动手做为主
+
+一.完成页面布局
+	
+	首页
+
+	列表页
+
+	详情页
+
+二.虚拟主机
+
+1.打开httpd.conf里面的虚拟主机配置
+wamp/bin/apache/apache2.4.9/conf/httpd.conf
+
+# Virtual hosts
+Include conf/extra/httpd-vhosts.conf
+
+2.修改httpd-vhosts.conf
+
+<VirtualHost *:80>
+    DocumentRoot "C:/blog"	 	#根目录
+    ServerName www.blog.com  	#访问域名
+    ServerAlias blog.com 		#域名别名
+    ErrorLog "logs/blog.log"	#错误日志
+    CustomLog "logs/www.blog.log" combined
+    <Directory "C:/blog">		#文件夹
+        Options Indexes FollowSymLinks ExecCGI Includes
+        AllowOverride All
+        Order Allow,Deny
+        #Allow from all
+        Require all granted
+    </Directory>
+</VirtualHost>
+
+3.修改系统hosts 文件 域名指向本机
+C:\Windows\System32\drivers\etc
+
+
+三.后台管理
+  1.后台管理员登录功能
+    
+    实现登录功能
+
+    管理员表 admin_user
+    CREATE TABLE `admin_user` (
+      `id` int(10) NOT NULL AUTO_INCREMENT,
+      `username` varchar(20) NOT NULL DEFAULT '',
+      `password` char(32) NOT NULL DEFAULT '',
+      `pass_time` int(10) NOT NULL,
+      `is_show` tinyint(1) NOT NULL DEFAULT '1',
+      PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
+
+  2.栏目分类
+
+    无限分类
+
+      一级栏目1
+        二级栏目1
+        二级栏目2
+          三级栏目1
+          三级栏目2
+            ......
+          三级栏目3
+        二级栏目3
+      一级栏目2
+        二级栏目1
+        二级栏目2
+        二级栏目3
+          三级栏目1
+          三级栏目2
+          三级栏目3
+      一级栏目3
+      一级栏目4
+
+    栏目分类表 cate
+
+    CREATE TABLE `cate` (
+      `cid` int(5) NOT NULL AUTO_INCREMENT COMMENT 'ID',
+      `pid` int(5) NOT NULL COMMENT '父类ID',
+      `cate_name` varchar(100) NOT NULL COMMENT '栏目名称',
+      `pic` varchar(100) NOT NULL DEFAULT '',
+      `ord` int(5) NOT NULL DEFAULT '0' COMMENT '排序',
+      `is_show` tinyint(1) NOT NULL DEFAULT '0' COMMENT '是否显示',
+      PRIMARY KEY (`cid`),
+      KEY `pid` (`pid`),
+      KEY `ord` (`ord`)
+    ) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8 COMMENT='栏目表';
+
+    cid   cate_name    pid     pic  ord  is_show
+    1     一级栏目1      0      pic  0      0
+    2     一级栏目2      0      pic  0      0
+    3     一级栏目3      0      pic  0      0
+    4     一级栏目4      0      pic  0      0
+    5     二级栏目1      1      pic  0      0
+    6     二级栏目2      1      pic  0      0
+    7     二级栏目3      1      pic  0      0
+    8     3级栏目1       6      pic  0      0
+    9     3级栏目2       6      pic  0      0
+    10    3级栏目3       6      pic  0      0
+
+
+    
+    注意：aid/cid , ord排序 , status状态字段
+
+  3.标签表
+        与文章对应，多对多的关系
+        一个文章有多个标签
+        一个标签也会对应多个文章
+
+
+    CREATE TABLE `tags` (
+      `tid` int(5) NOT NULL AUTO_INCREMENT COMMENT 'ID',
+      `tag_name` varchar(100) NOT NULL COMMENT '名称',
+      `clicks` int(10) NOT NULL DEFAULT '0' COMMENT '点击数',
+      `ord` int(5) NOT NULL DEFAULT '0' COMMENT '排序',
+      `is_show` tinyint(1) NOT NULL DEFAULT '0' COMMENT '是否显示',
+      PRIMARY KEY (`tid`),
+      UNIQUE KEY `tag_name` (`tag_name`)
+    ) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8 COMMENT='标签表';
+
+
+    4.文章表
+        查看文章详情页，查看需要哪些字段
+
+    CREATE TABLE `article` (
+      `aid` int(10) NOT NULL AUTO_INCREMENT COMMENT '文章ID',
+      `cid` int(10) NOT NULL COMMENT '类别ID',
+      `title` varchar(120) NOT NULL COMMENT '标题',
+      `description` varchar(200) NOT NULL COMMENT '描述简介',
+      `content` text NOT NULL COMMENT '内容',
+      `author` varchar(30) NOT NULL COMMENT '作者',
+      `ord` int(5) NOT NULL DEFAULT '0' COMMENT '排序',
+      `clicks` int(10) NOT NULL DEFAULT '0' COMMENT '点击量',
+      `is_show` tinyint(1) NOT NULL DEFAULT '0' COMMENT '是否显示',
+      `update_time` int(10) NOT NULL COMMENT '更新时间',
+      `pass_time` int(10) NOT NULL COMMENT '发布时间',
+      `top` tinyint(1) NOT NULL DEFAULT '0' COMMENT '置顶',
+      `good` tinyint(1) NOT NULL DEFAULT '0' COMMENT '加精',
+      PRIMARY KEY (`aid`),
+      KEY `cid` (`cid`)
+    ) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8 COMMENT='文章表';
+
+    
+
+  5 文章标签关系表
+  article_tags
+
+  CREATE TABLE `tags_article` (
+      `tid` int(10) NOT NULL COMMENT '标签ID',
+      `aid` int(10) NOT NULL COMMENT '文章ID',
+      KEY `tid` (`tid`,`aid`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='标签文章关系表';
+
+  aid   tid
+  1     1
+  1     2
+  1     3
+  2     2
+  2     3
+
+  index aid(aid),
+  index tid(tid)
+
+
+  6.轮播表 
+
+
+    CREATE TABLE `player` (
+      `id` int(10) NOT NULL AUTO_INCREMENT,
+      `title` varchar(50) NOT NULL DEFAULT '',
+      `url` varchar(100) NOT NULL DEFAULT '',
+      `pic` varchar(100) NOT NULL DEFAULT '',
+      `pass_time` int(10) NOT NULL,
+      `is_show` tinyint(1) NOT NULL DEFAULT '1',
+      `ord` int(5) NOT NULL DEFAULT '0',
+      PRIMARY KEY (`id`),
+      KEY `ord` (`ord`)
+    ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
+
+    7.图片表
+    分类中提取一个一级栏目当作相册。
+
+    CREATE TABLE `picture` (
+      `id` int(10) NOT NULL AUTO_INCREMENT,
+      `pic` varchar(100) NOT NULL DEFAULT '',
+      `cid` int(10) NOT NULL,
+      `is_show` tinyint(1) NOT NULL DEFAULT '1',
+      PRIMARY KEY (`id`),
+      KEY `cid` (`cid`)
+    ) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8;
+
+四、设计项目结构
+  admin 后台管理功能
+    建议：一个功能一个文件夹
+  css 放CSS样式
+  JS  放JS文件
+  images  放图片
+  public  公用文件 比如：公用 
+  index.php 首页
+  list.php 列表页
+  show.php 详情页
+
+  config.php 配置文件
+  定义一些公用常量 用 define 定义
+
+  db.php 数据库操作文件
+
+  func.php 公用函数文件
+
+  文件包含:建议 
+  css 和 js 图片 使用根相对路径 /
+  PHP文件 include 使用目录相对路径 . 和 ..
